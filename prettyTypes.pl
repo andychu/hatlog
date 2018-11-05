@@ -58,7 +58,7 @@ replace_vars(Val, UVal, Vars, NewVars, L, Z) :-
 
 replace_var(Value, UValue, Vars, NewVars, L, Z) :-
     format(atom(A0), '~p', Value),
-    writeln(A0),
+    %writeln(A0),
     (   get_assoc(A0, Vars, A1) ->
         Vars = NewVars,       % var exists
         UValue = A1,

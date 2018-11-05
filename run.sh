@@ -34,7 +34,7 @@ gen-prolog() {
     echo $py
     #bin/hatlog $py
 
-    local out=_tmp/$(basename $py).pl
+    local out=_tmp/$(basename $py .py).pl
     ./gen_prolog.py $py > $out
     ls -l $out
   done
@@ -42,18 +42,19 @@ gen-prolog() {
 
 # Run prolog and show inferred signature
 infer-sig() {
-  rm -f -v examples/*.txt
+  rm -f -v _tmp/*.txt
   for pl in _tmp/*.pl; do
     echo --- $pl ---
-    swipl -s $pl
+    swipl -s $pl > _tmp/$(basename $pl .pl).txt
     echo
   done
-  head examples/*.txt
+  head _tmp/*.txt
 }
 
 compare-gold() {
   for gold in gold/*.pl; do
-    if diff -u $gold _tmp/$(basename $gold); then
+    local prefix=${gold%.py.pl}
+    if diff -u $gold _tmp/$(basename $prefix).pl; then
       echo OK
     else
       return 1
@@ -62,9 +63,16 @@ compare-gold() {
   echo 'PASS'
 }
 
+pathjoin() {
+  ./gen_prolog.py examples/pathjoin.py > _tmp/pathjoin.pl
+
+  # This just prints warnings and no output?
+  swipl -s _tmp/pathjoin.pl
+}
+
 all() {
   gen-prolog
-  compare-gold
+  #compare-gold
   infer-sig
 }
 

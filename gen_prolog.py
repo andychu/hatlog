@@ -255,13 +255,15 @@ def generate_arg(arg):
 
 def generate_fun(other_nodes):
     n = len(other_nodes)
-    for i, (a, args, b) in enumerate(other_nodes):
+    # pred_name is something like z_assign, z_method_call, or even '=' for
+    # return?
+    for i, (pred_name, args, b) in enumerate(other_nodes):
       args_code = ', '.join(generate_arg(x) for x in args + [b])
 
       # Last statement needs a period; others have cmomas.
       punct = '.' if i == n-1 else ','
 
-      print('    %s(%s)%s' % (a, args_code, punct))
+      print('    %s(%s)%s' % (pred_name, args_code, punct))
 
     print('')
 
@@ -278,35 +280,29 @@ def generate_prolog(nodes, name, out_file):
     other_nodes, func_node = nodes[:-1], nodes[-1]
 
     print('f(%s, [%s], %s) :-' % (name, ', '.join(func_node[1]), func_node[-1]))
-    # print(x[:-1])
 
     generate_fun(other_nodes)
-    #log('nodes %s', nodes)
+    log('nodes %s', nodes)
 
-    # TODO: Write to stdout instead of a hard-coded filename.  stdout in prolog
-    # is user_output, but I don't know how to use it.
+    # NOTE: There is some spurious output I hvaen't tracked down for
+    # examples/map.py.
+    # I commented out writeln() call but can't find another.
+
     print('''main :-
-    open('%s.txt', write, Stream),
-    (
         f(%s, Z0, Z1),
         unvar(Z0, Z1, Z2, Z3, Z4), %% replace free vars with names
         pretty_args(Z2, Y),
         pretty_type(Z3, Z),
         pretty_generic(Z4, X),
-        format(Stream, '~a::', [X]),
-        write(Stream, Y),
-        write(Stream, ' -> '),
-        write(Stream, Z),
-        write(Stream, '\\n'),
-
-        true
-    ),
-
-    close(Stream),
-    halt.
+        format('~a::', [X]),
+        write(Y),
+        write(' -> '),
+        write(Z),
+        write('\\n'),
+        halt.
 main :-
     halt(1).
-''' % (out_file, name), end='')
+''' % name, end='')
 
 
 def main(argv):
