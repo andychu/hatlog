@@ -6,6 +6,16 @@ import sys
 from collections import defaultdict
 
 
+def log(msg, *args):
+    if args:
+        msg = msg % args
+    print(msg, file=sys.stderr)
+
+
+def to_snake_case(label):
+    return re.sub(r'([a-z])([A-Z])', r'\1_\2', label).lower()
+
+
 class Env:
     def __init__(self, values=None, parent=None):
         self.values = values or {}
@@ -22,12 +32,15 @@ class Env:
         self.values[label] = value
 
 
+
+
 def flatten(root):
     if len(root.body) != 1 or not isinstance(root.body[0], ast.FunctionDef):
         raise ValueError("hatlog supports expects a function")
     x = Flattener()
-    x.flatten(root.body[0])
-    return x.nodes, root.body[0].name
+    func_body = root.body[0]
+    x.flatten(func_body)
+    return x.nodes, func_body.name
 
 
 NOT_SUPPORTED = defaultdict(set,
@@ -53,11 +66,11 @@ class Flattener:
 
     def flatten(self, node):
         if isinstance(node, list):
-            f = [self.flatten(e) for e in node]
-            return f
+            return [self.flatten(e) for e in node]
         elif node is None:
             return 'v'
         else:
+            # Dispatch to flatten_* function, based on node name.
             sub = getattr(
                 self,
                 'flatten_%s' % type(node).__name__.lower(),
@@ -73,7 +86,7 @@ class Flattener:
 
         node_type = self.new_type()
         self.nodes.append(
-            ('z_%s' % self.to_snake_case(type(node).__name__), f, node_type))
+            ('z_%s' % to_snake_case(type(node).__name__), f, node_type))
         return node_type
 
     def flatten_call(self, node):
@@ -226,9 +239,6 @@ class Flattener:
         self.type_index += 1
         return 'Z%d' % self.type_index
 
-    def to_snake_case(self, label):
-        return re.sub(r'([a-z])([A-Z])', r'\1_\2', label).lower()
-
 # BinOp(2, BinOp(b, a))
 
 # bin_op(X1, X2, X3)
@@ -243,31 +253,39 @@ def generate_arg(arg):
         return '[%s]' % ', '.join(generate_arg(a) for a in arg)
 
 
-def generate_fun(x, name):
-    head = 'f(%s, [%s], %s) :-' % (name, ', '.join(x[-1][1]), x[-1][-1])
-    # print(x[:-1])
-
-    result = []
-    for a, args, b in x[:-1]:
+def generate_fun(other_nodes):
+    n = len(other_nodes)
+    for i, (a, args, b) in enumerate(other_nodes):
       args_code = ', '.join(generate_arg(x) for x in args + [b])
-      result.append('%s(%s)' % (a, args_code))
-    block = ',\n    '.join(result)
-    return '%s\n    %s.\n' % (head, block)
+
+      # Last statement needs a period; others have cmomas.
+      punct = '.' if i == n-1 else ','
+
+      print('    %s(%s)%s' % (a, args_code, punct))
+
+    print('')
 
 
-def generate_prolog(x, name, file):
-    # TODO: Write to stdout instead of a hard-coded filename.  stdout in prolog
-    # is user_output, but I don't know how to use it.
-
-    header = '''\
+def generate_prolog(nodes, name, out_file):
+    print('''\
 :- initialization main.
 
 :- use_module(pythonTypeSystem).
 :- use_module(prettyTypes).
-'''
-    fun = generate_fun(x, name)
+''')
 
-    m = '''main :-
+    # As a result of flattening, the last node is the root.
+    other_nodes, func_node = nodes[:-1], nodes[-1]
+
+    print('f(%s, [%s], %s) :-' % (name, ', '.join(func_node[1]), func_node[-1]))
+    # print(x[:-1])
+
+    generate_fun(other_nodes)
+    #log('nodes %s', nodes)
+
+    # TODO: Write to stdout instead of a hard-coded filename.  stdout in prolog
+    # is user_output, but I don't know how to use it.
+    print('''main :-
     open('%s.txt', write, Stream),
     (
         f(%s, Z0, Z1),
@@ -288,10 +306,7 @@ def generate_prolog(x, name, file):
     halt.
 main :-
     halt(1).
-''' % (file, name)
-
-    program = '%s\n%s\n%s' % (header, fun, m)
-    return program
+''' % (out_file, name), end='')
 
 
 def main(argv):
@@ -299,8 +314,7 @@ def main(argv):
     with open(py_path) as f:
       source = f.read()
     nodes, body_name = flatten(ast.parse(source))
-    output = generate_prolog(nodes, body_name, py_path)
-    sys.stdout.write(output)
+    generate_prolog(nodes, body_name, py_path)
 
 
 if __name__ == '__main__':
