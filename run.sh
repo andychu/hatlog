@@ -35,7 +35,7 @@ gen-prolog() {
     #bin/hatlog $py
 
     local out=_tmp/$(basename $py).pl
-    PYTHONPATH=. hatlog/prolog.py $py > $out
+    ./gen_prolog.py $py > $out
     ls -l $out
   done
 }
@@ -51,11 +51,6 @@ infer-sig() {
   head examples/*.txt
 }
 
-all() {
-  gen-prolog
-  infer-sig
-}
-
 compare-gold() {
   for gold in gold/*.pl; do
     if diff $gold _tmp/$(basename $gold); then
@@ -67,10 +62,15 @@ compare-gold() {
   echo 'PASS'
 }
 
+all() {
+  gen-prolog
+  compare-gold
+  infer-sig
+}
+
 count() {
   # Only 278 lines
-  find hatlog -name '*.py' | xargs wc -l | sort -n
-
+  wc -l *.py
   echo
 
   # Only 161 lines

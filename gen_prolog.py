@@ -280,5 +280,6 @@ def main(argv):
     output = generate_prolog(*(flatten(ast.parse(source)) + [py_path]))
     sys.stdout.write(output)
 
+
 if __name__ == '__main__':
   main(sys.argv)
