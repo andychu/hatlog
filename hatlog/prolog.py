@@ -37,7 +37,8 @@ NOT_SUPPORTED = defaultdict(set,
     AugAssign={'op'},
     Call={'keywords', 'starargs', 'kwargs'},
     For={'orelse'},
-    Attribute={'ctx'})
+    Attribute={'ctx'}
+)
 
 
 class Flattener:
@@ -234,6 +235,8 @@ def generate_fun(x, name):
 
 
 def generate_prolog(x, name, file):
+    # TODO: Write to stdout instead of a hard-coded filename.  stdout in prolog
+    # is user_output, but I don't know how to use it.
 
     header = '''\
 :- initialization main.

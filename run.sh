@@ -56,6 +56,17 @@ all() {
   infer-sig
 }
 
+compare-gold() {
+  for gold in gold/*.pl; do
+    if diff $gold _tmp/$(basename $gold); then
+      echo OK
+    else
+      return 1
+    fi
+  done
+  echo 'PASS'
+}
+
 count() {
   # Only 278 lines
   find hatlog -name '*.py' | xargs wc -l | sort -n
