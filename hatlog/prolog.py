@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+
+import ast
+import sys
+
+from hatlog.flattener import flatten
+
+
 def generate_prolog(x, name, file):
 
     header = '''\
@@ -29,11 +37,18 @@ def generate_prolog(x, name, file):
     halt.
 main :-
     halt(1).
-''' %(file, name)
+''' % (file, name)
+
     program = '%s\n%s\n%s' % (header, fun, m)
+    return program
+
+
+def write_prolog(x, name, file):
+    program = generate_prolog(x, name, file)
     with open('%s.pl' % file, 'w') as f:
-        f.write(program)
+      f.write(program)
     return '%s.pl' % file
+
 
 def generate_fun(x, name):
     head = 'f(%s, [%s], %s) :-' % (name, ', '.join(x[-1][1]), x[-1][-1])
@@ -47,3 +62,12 @@ def generate_arg(a):
     else:
         return '[%s]' % ', '.join(map(generate_arg, a))
 
+def main(argv):
+    py_path = argv[1]
+    with open(py_path) as f:
+      source = f.read()
+    output = generate_prolog(*(flatten(ast.parse(source)) + [py_path]))
+    sys.stdout.write(output)
+
+if __name__ == '__main__':
+  main(sys.argv)

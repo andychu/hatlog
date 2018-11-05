@@ -8,6 +8,8 @@ import re
 import hatlog
 import ast
 
+from hatlog.prolog import write_prolog
+
 
 
 
@@ -17,9 +19,11 @@ def infer_file(filename):
     return infer(source, filename)
 
 def infer(source, filename):
-    output = hatlog.generate_prolog(*(hatlog.flatten(ast.parse(source)) + [filename]))
-    child = subprocess.Popen(['swipl', '-s', output], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    s = child.communicate()[0]
+    pl_path = write_prolog(*(hatlog.flatten(ast.parse(source)) + [filename]))
+    argv = ['swipl', '-s', pl_path]
+    print(argv)
+    child = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = child.communicate()
     q = child.returncode
     if q == 0:
         with open('%s.txt' % filename, 'r') as f:
@@ -27,7 +31,11 @@ def infer(source, filename):
 
         print(z)
     else:
-        print('error: %s' % s)
+        print('exit code: %d' % q)
+    print('stdout')
+    print(stdout)
+    print('stderr')
+    print(stderr)
 
 def main():
     if len(sys.argv) == 1:
