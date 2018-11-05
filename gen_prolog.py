@@ -27,7 +27,7 @@ def flatten(root):
         raise ValueError("hatlog supports expects a function")
     x = Flattener()
     x.flatten(root.body[0])
-    return [x.nodes, root.body[0].name]
+    return x.nodes, root.body[0].name
 
 
 NOT_SUPPORTED = defaultdict(set,
@@ -65,22 +65,31 @@ class Flattener:
             return sub(node)
 
     def default(self, node):
-        f = [self.flatten(getattr(node, f)) for f in node._fields if f not in NOT_SUPPORTED[type(node).__name__]]
+        f = [
+            self.flatten(getattr(node, f))
+            for f in node._fields
+            if f not in NOT_SUPPORTED[type(node).__name__]
+        ]
+
         node_type = self.new_type()
-        self.nodes.append(('z_%s' % self.to_snake_case(type(node).__name__), f, node_type))
+        self.nodes.append(
+            ('z_%s' % self.to_snake_case(type(node).__name__), f, node_type))
         return node_type
 
     def flatten_call(self, node):
         if isinstance(node.func, ast.Name) and node.func.id == self.function:
             return self.flatten_rec(node)
+
         elif isinstance(node.func, ast.Attribute):
             return self.flatten_method_call(node)
+
         else:
             function = self.flatten(node.func)
             args = [self.flatten(e) for e in node.args]
             return_type = self.new_type()
 
-            if isinstance(node.func, ast.Name) and node.func.id not in self.env.values: # named
+            if (isinstance(node.func, ast.Name) and
+                node.func.id not in self.env.values): # named
                 self.nodes.append(('z_call', [node.func.id, args], return_type))
             else:
                 self.nodes.append(('z_fcall', [function, args], return_type))
@@ -90,9 +99,11 @@ class Flattener:
     def flatten_subscript(self, node):
         value = self.flatten(node.value)
         node_type = self.new_type()
+
         if isinstance(node.slice, ast.Index):
             index = self.flatten(node.slice.value)
             self.nodes.append(('z_index', [value, index], node_type))
+
         else:
             lower = self.flatten(node.slice.lower) if node.slice.lower else None
             upper = self.flatten(node.slice.upper) if node.slice.upper else None
@@ -101,7 +112,8 @@ class Flattener:
             elif lower is None and upper:
                 lower = upper
             else:
-                raise ValueError('hatlog expects only slice like [:x], [x:] or [x:y]')
+                raise ValueError(
+                    'hatlog expects only slice like [:x], [x:] or [x:y]')
             self.nodes.append(('z_slice', [value, lower, upper], node_type))
         return node_type
 
@@ -156,7 +168,8 @@ class Flattener:
         receiver = self.flatten(node.func.value)
         args = list(map(self.flatten, node.args))
         node_type = self.new_type()
-        self.nodes.append(('z_method_call', [receiver, node.func.attr, args], node_type))
+        self.nodes.append(
+            ('z_method_call', [receiver, node.func.attr, args], node_type))
         return node_type
 
 
@@ -164,7 +177,8 @@ class Flattener:
         if len(node.keys) == 0:
             sub_types = [self.new_type(), self.new_type()]
         else:
-            sub_types = zip([self.flatten(a) for a in node.keys], [self.flatten(b) for b in node.values])
+            sub_types = zip([self.flatten(a) for a in node.keys],
+                            [self.flatten(b) for b in node.values])
         node_type = self.new_type()
         self.nodes.append(('z_dict', sub_types, node_type))
         return node_type
@@ -193,9 +207,11 @@ class Flattener:
         self.function = node.name
         self.env[node.name] = node.name
         self.env = Env(dict(self.args), self.env)
-        [self.flatten(child) for child in node.body]
+        for child in node.body:
+            self.flatten(child)
         self.env = self.env.parent
-        self.nodes.append(('z_function', [a[1] for a in self.args], self.return_type))
+        self.nodes.append(
+            ('z_function', [a[1] for a in self.args], self.return_type))
         return self.env[node.name]
 
     def flatten_expr(self, node):
@@ -220,17 +236,22 @@ class Flattener:
 
 
 
-def generate_arg(a):
-    if isinstance(a, str):
-        return a
+def generate_arg(arg):
+    if isinstance(arg, str):
+        return arg
     else:
-        return '[%s]' % ', '.join(map(generate_arg, a))
+        return '[%s]' % ', '.join(generate_arg(a) for a in arg)
 
 
 def generate_fun(x, name):
     head = 'f(%s, [%s], %s) :-' % (name, ', '.join(x[-1][1]), x[-1][-1])
     # print(x[:-1])
-    block = ',\n    '.join(['%s(%s)' % (a, ', '.join(map(generate_arg, args + [b]))) for a, args, b in x[:-1]])
+
+    result = []
+    for a, args, b in x[:-1]:
+      args_code = ', '.join(generate_arg(x) for x in args + [b])
+      result.append('%s(%s)' % (a, args_code))
+    block = ',\n    '.join(result)
     return '%s\n    %s.\n' % (head, block)
 
 
@@ -277,7 +298,8 @@ def main(argv):
     py_path = argv[1]
     with open(py_path) as f:
       source = f.read()
-    output = generate_prolog(*(flatten(ast.parse(source)) + [py_path]))
+    nodes, body_name = flatten(ast.parse(source))
+    output = generate_prolog(nodes, body_name, py_path)
     sys.stdout.write(output)
 
 
