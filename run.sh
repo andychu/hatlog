@@ -4,8 +4,8 @@
 #   ./run.sh <function name>
 #
 # Example:
-#   ./run.sh gen-prolog  # generate prolog source from Python
-#   ./run.sh infer-sig   # run prolog and show inferred signature
+#   ./run.sh all   # generate prolog, run it, and show inferred signature
+
 
 set -o nounset
 set -o pipefail
@@ -26,6 +26,7 @@ demo() {
   ls -l examples
 }
 
+# Generate prolog source from Python
 gen-prolog() {
   mkdir -p _tmp
   for py in examples/*.py; do
@@ -39,6 +40,7 @@ gen-prolog() {
   done
 }
 
+# Run prolog and show inferred signature
 infer-sig() {
   rm -f -v examples/*.txt
   for pl in _tmp/*.pl; do
@@ -47,6 +49,11 @@ infer-sig() {
     echo
   done
   head examples/*.txt
+}
+
+all() {
+  gen-prolog
+  infer-sig
 }
 
 count() {
