@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+#
+# Given a Python function, parse it and generate a Prolog program to infer its
+# type.  The rules are specified in pythonTypeSystem.pl.
 
 import ast
 import re
@@ -30,17 +33,6 @@ class Env:
 
     def __setitem__(self, label, value):
         self.values[label] = value
-
-
-
-
-def flatten(root):
-    if len(root.body) != 1 or not isinstance(root.body[0], ast.FunctionDef):
-        raise ValueError("hatlog supports expects a function")
-    x = Flattener()
-    func_body = root.body[0]
-    x.flatten(func_body)
-    return x.nodes, func_body.name
 
 
 NOT_SUPPORTED = defaultdict(set,
@@ -315,9 +307,17 @@ main :-
 def main(argv):
     py_path = argv[1]
     with open(py_path) as f:
-      source = f.read()
-    nodes, body_name = flatten(ast.parse(source))
-    generate_prolog(nodes, body_name, py_path)
+        source = f.read()
+
+    root = ast.parse(source)
+    if len(root.body) != 1 or not isinstance(root.body[0], ast.FunctionDef):
+        raise ValueError("hatlog supports expects a function")
+
+    fl = Flattener()
+    func_body = root.body[0]
+    fl.flatten(func_body)
+
+    generate_prolog(fl.nodes, func_body.name, py_path)
 
 
 if __name__ == '__main__':
