@@ -47,14 +47,25 @@ NOT_SUPPORTED = defaultdict(set,
 
 
 class Flattener:
-    def __init__(self):
-        self.env = {}
-        self.nodes = []
-        self.type_index = -1
+    def __init__(self, nodes):
+        """
+        Args:
+          nodes: output list to append to
+        """
+        self.nodes = nodes 
+        self.type_index = -1  # generate unique Prolog variables
         self.env = Env()
+
+        # These three are used for recurisve calls.  Set in flatten_functiondef
+        # and used in flatten_call.
+        # TODO: Should they also be output params?  To hook up to main?
         self.args = []
         self.return_type = None
         self.function = ''
+
+    def new_type(self):
+        self.type_index += 1
+        return 'Z%d' % self.type_index
 
     def flatten(self, node):
         if isinstance(node, list):
@@ -81,9 +92,21 @@ class Flattener:
             ('z_%s' % to_snake_case(type(node).__name__), f, node_type))
         return node_type
 
+    def _FlattenRecursiveCall(self, node):
+        '''
+        we know that functions return the same value
+        prolog terms cant be rec so we =
+        '''
+        if len(node.args) != len(self.args):
+            raise ValueError("%s expected %d args" % (len(self.args)))
+        for a, (_, b) in zip(node.args, self.args):
+            c = self.flatten(a)
+            self.nodes.append(('=', [c], b))
+        return self.return_type
+
     def flatten_call(self, node):
         if isinstance(node.func, ast.Name) and node.func.id == self.function:
-            return self.flatten_rec(node)
+            return self._FlattenRecursiveCall(node)
 
         elif isinstance(node.func, ast.Attribute):
             return self.flatten_method_call(node)
@@ -127,18 +150,6 @@ class Flattener:
             return 'int'
         else:
             return 'float'
-
-    def flatten_rec(self, node):
-        '''
-        we know that functions return the same value
-        prolog terms cant be rec so we =
-        '''
-        if len(node.args) != len(self.args):
-            raise ValueError("%s expected %d args" % (len(self.args)))
-        for a, (_, b) in zip(node.args, self.args):
-            c = self.flatten(a)
-            self.nodes.append(('=', [c], b))
-        return self.return_type
 
     def flatten_str(self, node):
         return 'str'
@@ -227,10 +238,6 @@ class Flattener:
         self.nodes.append(('=', [v], self.return_type))
         return v
 
-    def new_type(self):
-        self.type_index += 1
-        return 'Z%d' % self.type_index
-
 # BinOp(2, BinOp(b, a))
 
 # bin_op(X1, X2, X3)
@@ -313,11 +320,12 @@ def main(argv):
     if len(root.body) != 1 or not isinstance(root.body[0], ast.FunctionDef):
         raise ValueError("hatlog supports expects a function")
 
-    fl = Flattener()
+    nodes = []
+    fl = Flattener(nodes)
     func_body = root.body[0]
-    fl.flatten(func_body)
+    fl.flatten_functiondef(func_body)
 
-    generate_prolog(fl.nodes, func_body.name, py_path)
+    generate_prolog(nodes, func_body.name, py_path)
 
 
 if __name__ == '__main__':
