@@ -17,6 +17,19 @@ Try this:
     # for each example, generate Prolog code and run it, printing the inferred type
     $ ./run.sh all
 
+    ... (snip) ...
+
+    ==> _tmp/fib.txt <==
+    ::int -> int
+    
+    ==> _tmp/join.txt <==
+    ::List[str] -> str -> str
+    
+    ==> _tmp/map.txt <==
+    ...
+    A,B::Callable[['A'],'B'] -> List['A'] -> List['B']
+    a
+
 TODO:
 
 - Why is there spurious text on `stdout` for `map.py`?  I got rid of one
@@ -24,15 +37,31 @@ TODO:
 - How to get rid of the remaining Prolog warnings?  I shut up one about
   discontiguous definitions, but I'm not sure if that is advisable.  (The
   original `bin/hatlog` Python script swallowed the `stderr` of `swipl`!)
-- Can we get `examples/pathjoin.py` to work?  It uses `*p` which may not be supported.
+- Can we get `examples/pathjoin.py` to work?  It uses `*p` which may not be
+  supported.
 - Can we infer more than one function at a time?  Imports, etc.?
 - Can these programs be ported to a toy Python prolog engine?  It would be help
   me understand what Prolog is doing.
   - http://code.activestate.com/recipes/303057/
   - http://openbookproject.net/py4fun/prolog/intro.html
 
+Questions:
+
+- Is it possible to generate error messages when a function fails to infer?
+  (e.g. `pathjoin.py`).
+- How does using Prolog compare to just writing a unification / type inference
+  algorithm by hand in Python?  (or OCaml, etc.)
+
 [archived-post]: https://web.archive.org/web/20170216030548/http://code.alehander42.me/prolog_type_systems
 
+This is a small amount of code:
+
+    $ ./run.sh count
+    324 gen_prolog.py
+
+     86 prettyTypes.pl
+     84 pythonTypeSystem.pl
+    170 total
 
 # Original README
 
