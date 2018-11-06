@@ -19,8 +19,11 @@ Try this:
 
 TODO:
 
-- Why is there spurious output for `map.py`?  I got rid of one `writeln()` but
-  I can't find the remaining "print".
+- Why is there spurious text on `stdout` for `map.py`?  I got rid of one
+  `writeln()` but I can't find the remaining "print".
+- How to get rid of the remaining Prolog warnings?  I shut up one about
+  discontiguous definitions, but I'm not sure if that is advisable.  (The
+  original `bin/hatlog` Python script swallowed the `stderr` of `swipl`!)
 - Can we get `examples/pathjoin.py` to work?  It uses `*p` which may not be supported.
 - Can we infer more than one function at a time?  Imports, etc.?
 - Can these programs be ported to a toy Python prolog engine?  It would be help
