@@ -288,6 +288,13 @@ def generate_prolog(nodes, name, out_file):
     # examples/map.py.
     # I commented out writeln() call but can't find another.
 
+    # NOTE: Why is the function type Z2 -> Z3?  Prettified to Y -> Z.
+    # I guess in the ast walker we know those are and the second and third
+    # thign.
+
+    # This could be structured in a different way, where Z0 is node.args and Z1
+    # is node.rets, or something.
+
     print('''main :-
         f(%s, Z0, Z1),
         unvar(Z0, Z1, Z2, Z3, Z4), %% replace free vars with names

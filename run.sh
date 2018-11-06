@@ -63,6 +63,14 @@ compare-gold() {
   echo 'PASS'
 }
 
+example() {
+  local name=${1:-fib}
+  ./gen_prolog.py examples/$name.py > _tmp/$name.pl
+
+  # This just prints warnings and no output?
+  swipl -s _tmp/$name.pl
+}
+
 pathjoin() {
   ./gen_prolog.py examples/pathjoin.py > _tmp/pathjoin.pl
 
