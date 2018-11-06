@@ -4,13 +4,6 @@
     z_fcall/3, z_unary_op/2, z_aug_assign/3, z_slice/4, z_index/3,
     z_if/4, z_for/4, m/4, sequence/1, f/3]).
 
-% Shutting this warning up.  Because the m(list ...) and m(str ...)
-% clauses aren't close to each other.  But does it have an affect on
-% execution?
-%
-% https://stackoverflow.com/questions/7400904/discontiguous-predicate-warning-from-gnu-prolog
-:- discontiguous pythonTypeSystem:m/4.
-
 z_list([], _).
 z_list([H], [list, H]).
 z_list_([H, H | T], [list, H]) :- z_list(T, [list, H]). % hom list
@@ -74,8 +67,8 @@ m([list, A], index, [A, int, int], int).
 
 
 m([dict, A, B], get, [A, B], B).
-m([dict, A, _], keys, [list, A]).
-m([dict, _, A], values, [list, A]).
+m([dict, A, _], keys, [], [list, A]).
+m([dict, _, A], values, [], [list, A]).
 m(string, join, [[list, string]], string).
 m(string, split, [string], [list, string]).
 
