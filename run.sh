@@ -32,7 +32,12 @@ gen-prolog() {
   for py in examples/*.py; do
     echo ---
     echo $py
-    #bin/hatlog $py
+
+    if [[ $py == */pathjoin.py ]]; then
+      # This doesn't work yet
+      echo '*** Skipping pathjoin.py'
+      continue
+    fi
 
     local out=_tmp/$(basename $py .py).pl
     ./gen_prolog.py $py > $out
@@ -53,8 +58,7 @@ infer-sig() {
 
 compare-gold() {
   for gold in gold/*.pl; do
-    local prefix=${gold%.py.pl}
-    if diff -u $gold _tmp/$(basename $prefix).pl; then
+    if diff -u $gold _tmp/$(basename $gold); then
       echo OK
     else
       return 1
@@ -80,7 +84,7 @@ pathjoin() {
 
 all() {
   gen-prolog
-  #compare-gold
+  compare-gold
   infer-sig
 }
 
