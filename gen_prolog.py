@@ -178,16 +178,14 @@ class Flattener:
 
     def flatten_method_call(self, node):
         '''
-        A call with an
-        attribute as func
+        A call with an attribute as func
         '''
         receiver = self.flatten(node.func.value)
-        args = list(map(self.flatten, node.args))
+        args = [self.flatten(arg) for arg in node.args]
         node_type = self.new_type()
         self.nodes.append(
             ('z_method_call', [receiver, node.func.attr, args], node_type))
         return node_type
-
 
     def flatten_dict(self, node):
         if len(node.keys) == 0:
@@ -206,7 +204,7 @@ class Flattener:
         return self.default(node)
 
     def flatten_name(self, node):
-        if node.id == 'True' or node.id == 'False':
+        if node.id in ('True', 'False'):
             return 'bool'
         elif node.id == 'None':
             return 'void'
@@ -226,8 +224,10 @@ class Flattener:
         for child in node.body:
             self.flatten(child)
         self.env = self.env.parent
-        self.nodes.append(
-            ('z_function', [a[1] for a in self.args], self.return_type))
+
+        arg_types = [prolog_type for _, prolog_type in self.args]
+        self.nodes.append(('z_function', arg_types, self.return_type))
+
         return self.env[node.name]
 
     def flatten_expr(self, node):
@@ -317,8 +317,10 @@ def main(argv):
         source = f.read()
 
     root = ast.parse(source)
+
+    # TODO: Can we relax this?
     if len(root.body) != 1 or not isinstance(root.body[0], ast.FunctionDef):
-        raise ValueError("hatlog supports expects a function")
+        raise ValueError("hatlog expects a single function")
 
     nodes = []
     fl = Flattener(nodes)

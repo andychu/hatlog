@@ -33,11 +33,13 @@ gen-prolog() {
     echo ---
     echo $py
 
-    if [[ $py == */pathjoin.py ]]; then
-      # This doesn't work yet
-      echo '*** Skipping pathjoin.py'
-      continue
-    fi
+    case $py in 
+      */pathjoin.py|*/inc3.py)
+        # This doesn't work yet
+        echo "*** Skipping $py"
+        continue
+        ;;
+    esac
 
     local out=_tmp/$(basename $py .py).pl
     ./gen_prolog.py $py > $out
