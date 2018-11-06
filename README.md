@@ -78,6 +78,14 @@ This is a small amount of code:
     - Macros are hard to debug.
   - Performance issues more likely than in other languages.
 
+- [Negative Reasoning in Chalk](https://aturon.github.io/blog/2017/04/24/negative-chalk/) -- Chalk is a project to use logic programming in the Rust compiler.  They want a sound specification for traits rather than ad hoc code.
+
+- [Scala's Type Checker Happens To Contain Prolog](https://www.reddit.com/r/scala/comments/6yhrh6/scalas_type_checker_happens_to_contain_prolog/) -- I don't really understand this.  From what I gather, the type system for Scala collections is very complex.
+
+I'm not exactly sure how related hatlog is to these systems, in principle.
+It's of course much smaller and simpler.  Note that hatlog does type inference
+but no type checking.
+
 # Original README
 
 ## hatlog
