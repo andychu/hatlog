@@ -3,7 +3,8 @@
 This is a demo of type inference on a tiny subset of Python in Prolog.
 
 The original blog post describing this work is **offline** as of November 2018,
-but there is a [copy on archive.org][archived-post].
+but there is a [copy on archive.org][archived-post].  ([Hacker News
+comments](https://news.ycombinator.com/item?id=12108041))
 
 There are three Python functions that can be inferred:
 `examples/{fib,join,map}.py`.  The prolog output is in
@@ -51,6 +52,8 @@ Questions:
   (e.g. `pathjoin.py`).
 - How does using Prolog compare to just writing a unification / type inference
   algorithm by hand in Python?  (or OCaml, etc.)
+- How does Prolog compare to [miniKanren](http://minikanren.org/)?  These
+  programs are pretty simple so maybe a simpler dialect suffices?
 
 [archived-post]: https://web.archive.org/web/20170216030548/http://code.alehander42.me/prolog_type_systems
 
@@ -62,6 +65,18 @@ This is a small amount of code:
      86 prettyTypes.pl
      84 pythonTypeSystem.pl
     170 total
+
+## Links
+
+- [Production Prolog](https://www.youtube.com/watch?v=G_eYTctGZw8) -- Nice
+  Strange Loop talk that evangelizes Prolog in the first half, and then
+  discusses the downsides:
+  - Syntax (period vs. comma)
+  - Small ecosystem
+  - Learning curve (even for a Haskell programmer)
+  - Failure is hard to debug -- Prolog just says `false.`
+    - Macros are hard to debug.
+  - Performance issues more likely than in other languages.
 
 # Original README
 
