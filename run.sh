@@ -45,6 +45,16 @@ gen-prolog() {
   done
 }
 
+# Use SWI Prolog.
+#
+# NOTE: On Ubuntu, I get GNU Prolog 1.3.0 from 2007!  It doesn't even support
+# shebang lines!!!
+#
+# http://www.gprolog.org/manual/html_node/gprolog007.html#sec11
+# Since version 1.4.0 it is possible to use a Prolog source file as a Unix
+# script-file (shebang support). A PrologScript file should begin as follows:
+#!/usr/bin/gprolog --consult-file
+
 # Run prolog and show inferred signature
 infer-sig() {
   rm -f -v _tmp/*.txt
