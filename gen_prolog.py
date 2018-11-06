@@ -299,18 +299,20 @@ def generate_prolog(nodes, name, out_file):
     # This could be structured in a different way, where Z0 is node.args and Z1
     # is node.rets, or something.
 
-    print('''main :-
-        f(%s, Z0, Z1),
-        unvar(Z0, Z1, Z2, Z3, Z4), %% replace free vars with names
-        pretty_args(Z2, Y),
-        pretty_type(Z3, Z),
-        pretty_generic(Z4, X),
-        format('~a::', [X]),
-        write(Y),
-        write(' -> '),
-        write(Z),
-        write('\\n'),
-        halt.
+    print('''\
+main :-
+    f(%s, Z0, Z1),
+    unvar(Z0, Z1, Z2, Z3, Z4), %% replace free vars with names
+    pretty_args(Z2, Y),
+    pretty_type(Z3, Z),
+    pretty_generic(Z4, X),
+    format('~a::', [X]),
+    write(Y),
+    write(' -> '),
+    write(Z),
+    write('\\n'),
+    halt.
+
 main :-
     writeln('No solution'),
     halt(1).
