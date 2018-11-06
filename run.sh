@@ -62,7 +62,12 @@ infer-sig() {
   rm -f -v _tmp/*.txt
   for pl in _tmp/*.pl; do
     echo --- $pl ---
-    swipl -s $pl > _tmp/$(basename $pl .pl).txt
+    # Keep going after failure
+    if ! swipl -s $pl > _tmp/$(basename $pl .pl).txt; then
+      echo
+      echo "*** failed to infer a type for $pl ***"
+      echo
+    fi
     echo
   done
   head _tmp/*.txt

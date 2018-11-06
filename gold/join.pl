@@ -28,4 +28,5 @@ main :-
         write('\n'),
         halt.
 main :-
+    writeln('No solution'),
     halt(1).

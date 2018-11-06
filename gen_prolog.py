@@ -46,7 +46,12 @@ NOT_SUPPORTED = defaultdict(set,
 )
 
 
-class Flattener:
+class CodeGenerator:
+    """
+    We use = for 'return' and recursive calls.
+
+    Note that =(X, Y) is an alternative syntax for X = Y in Prolog.
+    """
     def __init__(self, nodes):
         """
         Args:
@@ -307,6 +312,7 @@ def generate_prolog(nodes, name, out_file):
         write('\\n'),
         halt.
 main :-
+    writeln('No solution'),
     halt(1).
 ''' % name, end='')
 
@@ -323,9 +329,9 @@ def main(argv):
         raise ValueError("hatlog expects a single function")
 
     nodes = []
-    fl = Flattener(nodes)
+    g = CodeGenerator(nodes)
     func_body = root.body[0]
-    fl.flatten_functiondef(func_body)
+    g.flatten_functiondef(func_body)
 
     generate_prolog(nodes, func_body.name, py_path)
 
