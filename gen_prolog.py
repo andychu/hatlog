@@ -24,14 +24,18 @@ class Env:
         self.values = values or {}
         self.parent = parent
 
-    def __getitem__(self, label):
+    def GetCurrent(self, label):
+      return self.values.get(label)
+
+    def Get(self, label):
         current = self
         while current is not None:
             if label in current.values:
                 return current.values[label]
             current = current.parent
+        return None
 
-    def __setitem__(self, label, value):
+    def Set(self, label, value):
         self.values[label] = value
 
 
@@ -86,6 +90,8 @@ class CodeGenerator:
             return sub(node)
 
     def default(self, node):
+        # Reflect over the fields and call flatten.  TODO: Error on
+        # NOT_SUPPORTED?
         f = [
             self.flatten(getattr(node, f))
             for f in node._fields
@@ -93,8 +99,11 @@ class CodeGenerator:
         ]
 
         node_type = self.new_type()
-        self.nodes.append(
-            ('z_%s' % to_snake_case(type(node).__name__), f, node_type))
+        # e.g. z_if, z_for, z_assign
+        node = ('z_%s' % to_snake_case(type(node).__name__), f, node_type)
+        log('default node: %s', node)
+
+        self.nodes.append(node)
         return node_type
 
     def _FlattenRecursiveCall(self, node):
@@ -118,14 +127,22 @@ class CodeGenerator:
 
         else:
             function = self.flatten(node.func)
+            log('node.func %s -> function %s', node.func, function)
             args = [self.flatten(e) for e in node.args]
             return_type = self.new_type()
 
+            # What is the difference between these two?  When we have seen the
+            # function or we haven't?
+
             if (isinstance(node.func, ast.Name) and
-                node.func.id not in self.env.values): # named
-                self.nodes.append(('z_call', [node.func.id, args], return_type))
+                self.env.GetCurrent(node.func.id) is None): # named
+                # z_call(Function, Args, Result)  :- f(Function, Args, Result).
+                node = ('z_call', [node.func.id, args], return_type)
             else:
-                self.nodes.append(('z_fcall', [function, args], return_type))
+                # z_fcall([function, Args, Res], Args, Res).
+                node = ('z_fcall', [function, args], return_type)
+            log('call node: %s', node)
+            self.nodes.append(node)
 
             return return_type
 
@@ -214,26 +231,31 @@ class CodeGenerator:
         elif node.id == 'None':
             return 'void'
         else:
-            name_type = self.env[node.id]
+            name_type = self.env.Get(node.id)
             if not name_type:
                 name_type = self.new_type()
-                self.env[node.id] = name_type
+                self.env.Set(node.id, name_type)
             return name_type
 
     def flatten_functiondef(self, node):
         self.args = [(arg.arg, self.new_type()) for arg in node.args.args]
         self.return_type = 'X'
         self.function = node.name
-        self.env[node.name] = node.name
+        self.env.Set(node.name, node.name)
+
+        # New scope
         self.env = Env(dict(self.args), self.env)
+
         for child in node.body:
             self.flatten(child)
+
+        # Old scope
         self.env = self.env.parent
 
         arg_types = [prolog_type for _, prolog_type in self.args]
         self.nodes.append(('z_function', arg_types, self.return_type))
 
-        return self.env[node.name]
+        return self.env.Get(node.name)
 
     def flatten_expr(self, node):
         return self.flatten(node.value)
@@ -286,7 +308,7 @@ def generate_prolog(nodes, name, out_file):
     print('f(%s, [%s], %s) :-' % (name, ', '.join(func_node[1]), func_node[-1]))
 
     generate_fun(other_nodes)
-    log('nodes %s', nodes)
+    #log('nodes %s', nodes)
 
     # NOTE: There is some spurious output I hvaen't tracked down for
     # examples/map.py.

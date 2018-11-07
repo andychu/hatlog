@@ -72,6 +72,6 @@ m([dict, _, A], values, [], [list, A]).
 m(string, join, [[list, string]], string).
 m(string, split, [string], [list, string]).
 
+% TODO: Use these!  None of the examples use them.
 f(len, [[list, _]], int).
 f(sorted, [[list, A]], [list, A]).
-

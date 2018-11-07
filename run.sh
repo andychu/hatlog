@@ -6,7 +6,6 @@
 # Example:
 #   ./run.sh all   # generate prolog, run it, and show inferred signature
 
-
 set -o nounset
 set -o pipefail
 set -o errexit
