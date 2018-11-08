@@ -6,17 +6,18 @@
 
 % What is this syntax?
 
-f(X:(Y->Z)) :-
+f(X,Y,Z) :-
         X = 1,
         Y = 2,
-        Z = 3,
-        format('~a\n', X),
-        format('~a\n', Y),
-        format('~a\n', Z),
+        format('f ~a\n', X),
+        format('f ~a\n', Y),
+        format('f ~a\n', Z),
         halt.
 
 main :-
-  f(X:(Y->Z)).
+  f( _, _, 3),
+  % format('f ~a\n', X),
+  write('done main\n').
 
 main :-
   writeln('Failed'),
