@@ -2,7 +2,9 @@
     is_number/1, z_assign/3, z_call/3, z_method_call/4, z_bin_op/3,
     z_cmp/3, z_eq/3,
     z_fcall/3, z_unary_op/2, z_aug_assign/3, z_slice/4, z_index/3,
-    z_if/4, z_for/4, m/4, sequence/1, f/3]).
+    z_if/4, z_for/4, m/4, sequence/1
+    % f/3
+    ]).
 
 z_list([], _).
 z_list([H], [list, H]).
@@ -73,5 +75,5 @@ m(string, join, [[list, string]], string).
 m(string, split, [string], [list, string]).
 
 % TODO: Use these!  None of the examples use them.
-f(len, [[list, _]], int).
-f(sorted, [[list, A]], [list, A]).
+%f(len, [[list, _]], int).
+%f(sorted, [[list, A]], [list, A]).
